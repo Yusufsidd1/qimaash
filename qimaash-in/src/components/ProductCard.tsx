@@ -1,12 +1,12 @@
 'use client'; // Because it has a button with an onClick handler
 
 import React from 'react';
-import type { IProduct } from '@/models/Product';
+import type { Product } from '@/types';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 
 interface ProductCardProps {
-  product: IProduct;
+  product: Product;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {

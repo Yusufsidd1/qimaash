@@ -1,25 +1,10 @@
 'use client';
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { IProduct } from '@/models/Product';
-
-// This is the shape of the item in the cart state, with product details populated
-export interface CartItem {
-  product: IProduct;
-  quantity: number;
-}
-
-// The cart object we get from the API
-export interface ApiCart {
-    _id: string;
-    sessionId: string;
-    items: CartItem[];
-    createdAt: string;
-    updatedAt: string;
-}
+import type { Cart } from '@/types'; // Import the new plain Cart type
 
 interface CartContextType {
-  cart: ApiCart | null;
+  cart: Cart | null;
   loading: boolean;
   isCartOpen: boolean;
   openCart: () => void;
@@ -34,7 +19,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cart, setCart] = useState<ApiCart | null>(null);
+  const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -60,7 +45,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const updateCart = async (productId: string, quantity: number) => {
     try {
-      // Optimistic UI update can be added here
       setLoading(true);
       const response = await fetch('/api/cart', {
         method: 'POST',
@@ -74,13 +58,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error('Failed to update cart:', error);
-      // Revert optimistic update if it was implemented
     } finally {
       setLoading(false);
     }
   };
 
-  const addToCart = async (productId: string, quantity: number = 1) => {
+  const addToCart = async (productId: string, quantity = 1) => {
     const existingItem = cart?.items.find(item => item.product._id === productId);
     const newQuantity = (existingItem?.quantity || 0) + quantity;
     await updateCart(productId, newQuantity);
@@ -94,10 +77,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     if (cart && cart.items.length > 0) {
         setLoading(true);
         try {
-            // This is inefficient but works with the current API.
-            // A dedicated DELETE /api/cart endpoint would be better.
             await Promise.all(cart.items.map(item => updateCart(item.product._id, 0)));
-            await fetchCart(); // Refetch the now-empty cart
+            await fetchCart();
         } catch (error) {
             console.error('Failed to clear cart:', error);
         } finally {
@@ -108,12 +89,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const getCartTotal = () => {
     if (!cart) return 0;
-    return cart.items.reduce((total, item) => total + item.product.price * item.quantity, 0);
+    return cart.items.reduce((total: number, item) => total + item.product.price * item.quantity, 0);
   };
 
   const getItemCount = () => {
     if (!cart) return 0;
-    return cart.items.reduce((total, item) => total + item.quantity, 0);
+    return cart.items.reduce((total: number, item) => total + item.quantity, 0);
   };
 
   const openCart = () => setIsCartOpen(true);

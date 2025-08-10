@@ -9,7 +9,9 @@ const SESSION_COOKIE_NAME = 'qimaash_session_id';
 
 // Helper to get or create a session
 async function getSessionId() {
-  const cookieStore = cookies();
+  // The user's build log indicates that cookies() is returning a Promise.
+  // We will await it to resolve the type error.
+  const cookieStore = await cookies();
   let sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (!sessionId) {
@@ -25,7 +27,7 @@ async function getSessionId() {
 }
 
 // GET /api/cart - Fetches the user's cart
-export async function GET(request: Request) {
+export async function GET() {
   try {
     await dbConnect();
     const sessionId = await getSessionId();
